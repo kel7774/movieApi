@@ -4,8 +4,67 @@ const Movie = require('../models/movie')
 
 //api/movies - get all movies
 exports.listMovies = async(req, res) => {
+  let { limit = 10, page = 1, category } = req.query;
+  const limitRecords = parseInt(limit)
+  const skip = (page -1) * limit;
 
+  let query = {};
+  if(q) {
+    query = {$text: {$search: q}};
+  }
+  if(category) query.category = category;
 
+  try {
+    const movies = await Movie.find(query).limit(limitRecords).skip(skip);
+    res.json(movies);
+  } catch (error) {
+    res.status(400).json({ message: error})
+  }
+
+}
+
+//POST req
+
+exports.insertSingleMovie = async(req, res) => {
+  const newMovie = new Movie({
+    name: req.body.name,
+    description: req.body.description,
+    category: req.body.category,
+    thumbnail: req.body.thumbnail,
+  });
+
+  try {
+    await newMovie.save();
+    res.json(newMovie);
+  } catch(error) {
+    res.status(400).json({ message: error})
+  }
+
+}
+
+exports.updateSingleMovie = async(req, res) => {
+  let paramId = req.params.id;
+  // grabbing from the router which the db generated on creation
+  let name = req.body.name;
+  // the name from the data base
+
+  try {
+    const updateMovie = await Movie.updateOne({ _id: paramId}, {name: name});
+    // paramId plugging in as the thing you're replacing
+    res.json(updateMovie);
+  } catch (error) {
+    res.status(400).json({ message: error})
+  }
+}
+
+exports.deleteSingleMovie = async(req, res) => {
+  let paramId = req.params.id;
+  try {
+    const deletedMovie = await Movie.deleteOne({ _id: paramId})
+    res.json(deletedMovie);
+  } catch (error) {
+    res.status(400).json({ message: error})
+  }
 }
 
 async function insertMovies () {
